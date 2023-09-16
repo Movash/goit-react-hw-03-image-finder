@@ -5,6 +5,7 @@ import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
 import Modal from './Modal/Modal';
 import Loader from './Loader/Loader';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 export class App extends Component {
   state = {
@@ -58,7 +59,11 @@ export class App extends Component {
   };
 
   handleSetSearchQuery = value => {
+    if (value.trim() !== '') {
     this.setState({ searchQuery: value, images: [], page: 1 });
+    } else {
+      Notify.info(`Write something`);
+    }
   };
 
   handleMoreImage = () => {
@@ -72,7 +77,8 @@ export class App extends Component {
     });
   };
 
-  // Як реалізувати блокування скролу за модалкою? 
+  // Як реалізувати блокування скролу за модалкою?
+  // А ще виникає проблема якщо зробити 2 однакових запити поспіль і щось не так з іконкою пошуку
 
   // const scrollController = {
   // scrollPosition: 0,
