@@ -2,7 +2,9 @@ import { getImagesBySearch } from './../api/Images';
 import { Component } from 'react';
 import Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
-import { InfinitySpin } from 'react-loader-spinner';
+import Button from './Button/Button';
+import Modal from './Modal/Modal';
+import Loader from './Loader/Loader';
 
 export class App extends Component {
   state = {
@@ -11,8 +13,10 @@ export class App extends Component {
     isLoading: false,
     searchQuery: '',
     page: 1,
-    isVisible: false,
+    isShowButton: false,
     hasLoadedImages: false,
+    isShowModal: false,
+    selectedImage: '',
   };
 
   componentDidUpdate(_, prevState) {
@@ -29,24 +33,27 @@ export class App extends Component {
 
   fetchImages = async () => {
     try {
-      this.setState({ isLoading: true });
+      this.setState({
+        isLoading: true,
+        hasLoadedImages: false,
+        isShowButton: false,
+      });
       const data = await getImagesBySearch(
         this.state.searchQuery,
         this.state.page
       );
-      // this.setState({ images: data.hits });
       this.setState(prevState => ({
         images: [...prevState.images, ...data.hits],
-        hasLoadedImages: true,
+        isShowButton: data.hits.length > 0,
       }));
-      // const numberOfPage = Math.ceil(data.totalHits / 12);
-      // if (this.state.page === numberOfPage) {
-      //   this.setState({isVisible: false})
-      // }
+      const numberOfPage = Math.ceil(data.totalHits / 12);
+      if (this.state.page === numberOfPage) {
+        this.setState({ isShowButton: false });
+      }
     } catch ({ message }) {
       this.setState({ error: message });
     } finally {
-      this.setState({ isLoading: false });
+      this.setState({ isLoading: false, hasLoadedImages: true });
     }
   };
 
@@ -58,23 +65,63 @@ export class App extends Component {
     this.setState(state => ({ page: state.page + 1 }));
   };
 
+  toggleModal = largeImageURL => {
+    this.setState({
+      isShowModal: !this.state.isShowModal,
+      selectedImage: largeImageURL,
+    });
+  };
+
+  // Як реалізувати блокування скролу за модалкою? 
+
+  // const scrollController = {
+  // scrollPosition: 0,
+  // disabledScroll() {
+  //   scrollController.scrollPosition = window.scrollY;
+  //   document.body.style.cssText = `
+  //     overflow: hidden;
+  //     position: fixed;
+  //     top: -${scrollController.scrollPosition}px;
+  //     left: 0;
+  //     height: 100vh;
+  //     width: 100vw;
+  //     padding-right: ${window.innerWidth - document.body.offsetWidth}px
+  //   `;
+  //   document.documentElement.style.scrollBehavior = 'unset';
+  // },
+  // enabledScroll() {
+  //   document.body.style.cssText = '';
+  //   window.scroll({top: scrollController.scrollPosition})
+  //   document.documentElement.style.scrollBehavior = '';
+  // },
+  // }
+
   render() {
-    const { images, error, isLoading, hasLoadedImages, isVisible } = this.state;
-    const { handleSetSearchQuery, handleMoreImage } = this;
+    const {
+      images,
+      error,
+      isLoading,
+      hasLoadedImages,
+      isShowButton,
+      isShowModal,
+      selectedImage,
+    } = this.state;
+    const { handleSetSearchQuery, handleMoreImage, toggleModal } = this;
     return (
       <div className="App">
         {error && <h1>{error}</h1>}
         <Searchbar onSubmit={handleSetSearchQuery} />
-        {isLoading && <InfinitySpin />}
+        {isLoading && <Loader />}
         {hasLoadedImages &&
           (!images.length ? (
             <h1>No data found</h1>
           ) : (
-            <ImageGallery images={images} />
+            <ImageGallery toggleModal={toggleModal} images={images} />
           ))}
-        {isVisible&&<button onClick={handleMoreImage} type="button" className="load-more">
-          Load more
-        </button>}
+        {isShowButton && <Button handleMoreImage={handleMoreImage} />}
+        {isShowModal && (
+          <Modal selectedImage={selectedImage} toggleModal={toggleModal} />
+        )}
       </div>
     );
   }
