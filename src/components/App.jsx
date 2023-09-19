@@ -89,11 +89,7 @@ export class App extends Component {
         {error && <h1>{error}</h1>}
         <Searchbar onSubmit={handleSetSearchQuery} />
         {isLoading && <Loader />}
-        {!images.length ? (
-          <h1>No data found</h1>
-        ) : (
-          <ImageGallery toggleModal={toggleModal} images={images} />
-        )}
+        {images.length && <ImageGallery toggleModal={toggleModal} images={images} />}
         {isShowButton && <Button handleMoreImage={handleMoreImage} />}
         {isShowModal && (
           <Modal selectedImage={selectedImage} toggleModal={toggleModal} />
